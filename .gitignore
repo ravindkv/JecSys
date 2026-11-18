@@ -2,6 +2,7 @@
 # Data inputs/outputs (kept locally, not in git)
 *.root
 *.txt
+!toDo.txt
 # ACLiC build products
 *.d
 *.so

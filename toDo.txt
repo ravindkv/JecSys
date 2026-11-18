@@ -1,0 +1,83 @@
+JecSys toDo: items postponed until after the refactor
+=====================================================
+Agreed 2026-11-18: every refactor phase must reproduce today's numbers
+exactly. The items below are noted here and NOT fixed during the refactor.
+Each one is done later as its own commit, with a before/after compareRoot
+report.
+
+Line numbers refer to the current (pre-refactor) files in JecSys.
+
+A. Physics fixes (change the numbers)
+-------------------------------------
+A1. softrad3.C:37-51  getY(): dx is never updated, so the test
+    "fabs(x-pt)<dx" is always false. The function returns the FIRST point in
+    (ptmin, ptmax), not the one closest to pt. Fix: set dx = fabs(x-pt) when
+    j is chosen.
+A2. reprocess.C:3141-3146  gamma+jet mass correction is applied only to
+    mpfchs1/ptchs/mpf1, not to mpfn/mpfu ("DP_2021 (bug!)"). The "latest"
+    variant is in the comment just above it.
+A3. globalFitL3Res.C:1577  bitmask "((1<<0) | (1<<nsamples))" marked "bug!"
+    (currently commented out). Check which sources it was meant for. This
+    becomes moot once sources list explicit targets (FitData.json).
+A4. Nuisance sources 17/19 and 18/20 have identical shapes, so the fit cannot
+    separate them. Decide whether to merge or replace them.
+A5. Review the 56 "DP_2021" markers (grep DP_2021 *.C): settings reverted for
+    the DP note (e.g. useGluonJES=false, usePFG/fitPFG=false,
+    fitPF_delta=0.20, correctZMass=false). Each one becomes an explicit
+    config flag with a _note during the refactor. Decide which to restore.
+A6. reprocess.C:50  fitUncMin = 0 with the comment "Some bug if unc<0?".
+    Find the cause.
+
+B. Placeholder inputs used for every year (hidden dependencies)
+---------------------------------------------------------------
+B1. globalFitSyst.C:181  photon gain from GamHistosFill_data_2018ABCD_v19
+    (2018 data) is used for all years.
+B2. globalFitSyst.C:277  hadW FSR from rootfiles/hadWMC16GHV7_JEC.root, which
+    is a stand-in built from jecdataRun2Test.root (see missing.md in
+    jecsys). It is used for all years.
+B3. globalFitSyst.C:338  ratio/eta00-13/hdm_cmb_mj from the archived Run 2
+    result rootfiles/jecdataRun2Test.root, used for all years.
+B4. reprocess.C:3520-3524  UL17 RunC L1RC/L1FastJet SimpleL1 JECs are used
+    for UL17 and UL18 (and Run2/lowPU).
+B5. globalFitSyst.C:~100-180  Zee -> gamma+jet mass-scale functions
+    "copied from reprocess.C" (EOY2017 origin, per the stage docs). Check
+    that they are valid for UL.
+B6. 2016GH reads 2016BCDEF's output as its reference (refIOV). This is by
+    design, but it must stay declared in Inputs.json.
+
+C. CorLevel = L1L2Res (kept as an option, but cannot run today)
+---------------------------------------------------------------
+Probe on 2026-11-18: the chain was run with CorLevel="L1L2Res" against all
+local inputs (jecsys + ../JERCProtoLab). Every epoch stops at its first
+missing file, so there may be more missing files after these:
+  2016BCDEF  ../JERCProtoLab/Summer19UL16/L3Residual_multijet/multijet_UL2016BCDEF_jecV5_jerV2.root   (reprocess.C:444)
+  2016GH     ../JERCProtoLab/Summer19UL16/L3Residual_multijet/multijet_UL2016FGH_jecV5_jerV2.root     (reprocess.C:444)
+  2017BCDEF  ../JERCProtoLab/Summer19UL17/L3Residual_Z/JEC_Combination_{Zmm,Zee}/ZJetCombination_{Zmm,Zee}_DYJets_Madgraph_09Aug2019_Summer19UL17_JECV5_L1L2Res.root   (reprocess.C:826)
+  2018ABCD   rootfiles/jecdataBCDEF_V4.root   (reprocess.C:2616, Z+jet JES for UL18)
+Also: the dijet input for L1L2Res is the EOY2017
+(Fall17_17Nov2017_V31) file for every year (reprocess.C:357-359), and the
+code prints "L1L2L3Res used for L1L2Res as placeholder".
+=> The L1L2Res path is ported, but there is no parity reference for it.
+   Find the inputs (EOS? older JERCProtoLab tags?), then make a golden
+   reference with jecsys and validate.
+
+D. Clean-ups that do not change the numbers (allowed during the refactor)
+-------------------------------------------------------------------------
+D1. reprocess.C:742   "RAED" -> "READ" (Run2Test branch, not used by the 4 epochs).
+D2. softrad3.C:860    "dR_m>0 | dR_m<0" -> "||" (same result for bools).
+D3. softrad3.C:73     unused argument dodijet.
+D4. reprocess.C:1259  rootfiles/th2d_jeteta_zpt.root is opened but never used.
+D5. reprocess.C:3920-3953  hruncl is written but never read (dropped;
+    compareRoot gets an explicit "removed by design" list).
+D6. globalFitL3Res.C:2588  result appended as a C++ snippet to
+    textFiles/globalFitL3Res.txt -> replaced by postfit/.../result.json.
+D7. Exit crash "double free or corruption" (tdrstyle_mod15.C globals
+    included in 3 ACLiC libraries). Expected to go away with the single
+    binary; confirm in Phase 1.
+
+E. After the refactor
+---------------------
+E1. Minuit2 via ROOT::Math::Minimizer (removes the one static callback
+    pointer); validate against the TMinuit results.
+E2. Add the other epochs as config only: sub-IOVs (2016BCD, 2016EF, 2018A-D,
+    2017B-F), 2017H low PU, Run2Test / globalFitRun2.C.
