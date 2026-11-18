@@ -1,4 +1,4 @@
-# JecSys refactor — design proposal (draft 2, 2026-11-18)
+# JecSys refactor — design proposal (draft 3, converged, 2026-11-18)
 
 Goal: turn the macro chain behind `runMe.sh` into a compiled, config-driven
 package (`runFit`) that is flexible, maintainable, understandable and, above
@@ -91,6 +91,7 @@ JecSys/
 │   └── archive/             jecdataRun2Test.root, hadW stand-in, ...
 │                            ../JERCProtoLab is NOT copied: referenced as ${jercProtoLab} in Inputs.json
 ├── forfit/   (git-ignored)  forfit/<corLevel>/<epoch>/{reprocess,jecBands,softRad,syst,renormPf}.root
+│                            + forfit_<corLevel>_<epoch>.root  (all of the above combined; replaces jecdata<epoch>.root)
 ├── postfit/  (git-ignored)  postfit/<corLevel>/<epoch>/{fit.root, result.json, config.resolved.json, run.log, plots/}
 └── obj/      (git-ignored)
 ```
@@ -110,6 +111,7 @@ prefit/ + ${jercProtoLab} (external, read-only)
    ├─ softRad   ─▶ forfit/<e>/softRad.root     hdm_*, fsr/hkfsr3_*
    ├─ syst      ─▶ forfit/<e>/syst.root        sys/*, fsr/hadw_fsr, hdm_gamjet, ghdm_*
    ├─ renormPf  ─▶ forfit/<e>/renormPf.root    *_ren, *_cmb*   (optional, not used by the fit today)
+   │      └─ (Pipeline) ─▶ forfit/<e>/forfit_<corLevel>_<epoch>.root   union of the step files above
    │
    ├─ fit       ─▶ postfit/<e>/fit.root        sys/emat, hjesfit*, fsr/hkfsr2_*; result.json
    └─ plot      ─▶ postfit/<e>/plots/*.pdf     (re-plot without re-fitting)
@@ -351,6 +353,9 @@ and are listed in `toDo.txt`.
   ~1e-6 for fit results). It ignores `_meta/`, and it takes a list of objects
   removed by design (e.g. `hruncl`). Hook it into `make test`. There is no
   L1L2Res reference, because its inputs are missing (`toDo.txt` C).
+  Once Phase 2 exists, the comparison is one pair of files per epoch:
+  `forfit_<corLevel>_<epoch>.root` plus `postfit/.../fit.root` against
+  today's `jecdata<epoch>.root`.
 * **Phase 1 (mechanical move).** Flat layout with `git mv` (history kept),
   Makefile, `runFit` calling the existing functions with minimal edits (no
   ACLiC, no `.C` includes, paths via config). **No renames yet.** Check parity
@@ -394,8 +399,12 @@ one or more commits that pass `make test`.
 New in round 2 (your additions):
 
 * **camelCase** for functions, methods and variables (`refactClass.md` §3).
-* **C++ class framework** (`refactClass.md`). Open questions for round 2 are
-  in `refactClass.md` §8.
+* **C++ class framework** (`refactClass.md`).
+
+Round-2 decisions (member style `config_`, PascalCase file names, jecsys-like
+step class names, one JSON per reader, `JecBands` as its own step,
+`forfit/<corLevel>/<epoch>/` with a combined `forfit_<corLevel>_<epoch>.root`,
+2-space indent and 100 columns) are in `refactClass.md` §8.
 
 ### Alternatives considered
 

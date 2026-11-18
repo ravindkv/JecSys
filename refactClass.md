@@ -1,8 +1,9 @@
-# JecSys as a C++ class framework (round 2, 2026-11-18)
+# JecSys as a C++ class framework (round 3, 2026-11-18)
 
 Companion to `refact.md`. That file covers layout, data flow, the CLI and the
 migration phases. This one covers the class design and the naming convention.
-The decisions from round 1 are listed in `refact.md` §10.
+The decisions from round 1 are in `refact.md` §10; those from round 2 are in
+§8 below. **The design has converged and is ready to implement.**
 
 ---
 
@@ -91,10 +92,12 @@ prevents this by keeping three things apart:
     forward declarations where they are enough.
 11. **Every class can be tested without input files.** It can be built from a
     config struct and in-memory graphs.
-12. **Provenance:** each step writes its resolved config and the git hash into
-    `_meta/` in its output file. Downstream steps read upstream settings from
-    there, which removes the hand copy `multijetModeS` = `multijetMode`.
-    `compareRoot` ignores `_meta/`.
+12. **Provenance:** each step writes into `_meta/<step>/` of its output file:
+    its resolved config, the git hash, and the paths and modification times of
+    the files it read. Downstream steps read upstream settings from there,
+    which removes the hand copy `multijetModeS` = `multijetMode`. `Pipeline`
+    uses the recorded inputs to warn when an output is older than an input it
+    was built from. `compareRoot` ignores `_meta/`.
 
 ---
 
@@ -419,6 +422,28 @@ Outputs go to `forfit/<corLevel>/<epoch>/` and `postfit/<corLevel>/<epoch>/`,
 so the two levels never overwrite each other. A refIOV is always looked up at
 the same level.
 
+**Combined forfit file (round 2).** Each forfit directory also holds
+`forfit_<corLevel>_<epoch>.root`, e.g.
+`forfit/L1L2L3Res/2016GH/forfit_L1L2L3Res_2016GH.root`. It is the union of the
+step files in that directory (`reprocess`, `jecBands`, `softRad`, `syst`, and
+`renormPf` if present), with the object paths unchanged. That makes it a
+drop-in replacement for today's `jecdata<epoch>.root` up to the start of the
+fit.
+
+* **Built by `Pipeline`** after the forfit steps of an epoch have run. It is
+  always rebuilt from the step files and never edited, and it is written
+  atomically through `OutputFile`.
+* **A duplicate object path is an error.** This enforces the rule that each
+  step writes only its own objects. `_meta/<step>/` keeps the per-step
+  provenance apart.
+* **Not read inside `runFit`:** the steps read the step files, so there is
+  only one source of truth. The combined file is for people, for older
+  minitools that expect the `jecdata` layout, and for the parity check (one
+  file to compare against today's `jecdata<epoch>.root`).
+* **The single file name carries `<corLevel>` and `<epoch>`**, so it stays
+  identifiable when copied out of its directory. The step files keep short
+  names.
+
 **Caveat (probe on 2026-11-18):** with `CorLevel = "L1L2Res"`, today's chain
 stops at a missing input for every epoch, even when it reads all of jecsys and
 `../JERCProtoLab` (details in `toDo.txt` §C). We can port the L1L2Res code
@@ -447,20 +472,25 @@ been validated.
 
 ---
 
-## 8. Open questions for round 2
+## 8. Decisions from round 2 (2026-11-18)
 
-1. **Member suffix:** `config_` (CMSSW style, my recommendation) or `mConfig`?
-2. **File and class names:** PascalCase files matching the class
-   (`SoftRad.h`, `config/SoftRad.json`) [recommended]. The alternative is
-   camelCase files (`softRad.h`).
-3. **Step class names:** keep the old macro names (`GlobalFitSyst`,
-   `GlobalFitL3Res`, `GlobalFitRenormPf`) so jecsys users find them
-   [recommended], or use shorter names (`Syst`, `Fit`, `RenormPf`)?
-4. **Seven channel readers, one JSON each:** fine, or merge the reader
-   settings into `Reprocess.json`? I recommend separate files, since that
-   follows your same-name rule, and each file stays small.
-5. **`JecBands` as its own step:** OK? It needs no channel inputs, so it can
-   run, and be checked, on its own.
-6. **`--corLevel` layout:** `forfit/<corLevel>/<epoch>/` OK?
-7. **`.clang-format` style:** base it on `Google` with 2-space indent and a
-   100-column limit, close to the current code? Or another style you use?
+| # | question | decision |
+|---|---|---|
+| 1 | Data member style | **`config_`** (trailing underscore, CMSSW style) |
+| 2 | File names | **PascalCase, matching the class**: `SoftRad.h`, `SoftRad.cpp`, `config/SoftRad.json` |
+| 3 | Step class names | **Same as, or close to, jecsys**: `Reprocess`, `SoftRad`, `GlobalFitSyst`, `GlobalFitRenormPf`, `GlobalFitL3Res` |
+| 4 | Channel reader config | **One JSON per reader** (7 files) |
+| 5 | `JecBands` | **Its own step** |
+| 6 | `--corLevel` layout | **`forfit/<corLevel>/<epoch>/`**, plus a combined `forfit_<corLevel>_<epoch>.root` in each directory (§6) |
+| 7 | Formatting | **2-space indent, 100-column limit** (`.clang-format` based on Google with these two settings) |
+
+On 6: I read "also add `forfit_corrLevel_epoch.root`" as one extra combined
+file per directory (§6). If you meant that every step file should carry the
+suffix (`reprocess_L1L2L3Res_2016GH.root`, ...), that is a one-line change in
+`Step::outputFile`.
+
+### Next step
+
+**Phase 0** (`refact.md` §9): freeze today's outputs of the four epochs as the
+golden reference, and write `compareRoot`. It changes no existing code, and
+every later phase is checked against it.
