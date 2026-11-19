@@ -1,0 +1,127 @@
+
+-----------------------------------------------
+        Date: 19 November 2026
+-----------------------------------------------
+
+Thanks a lot. Finally:
++ Let input dir has it’s own README.md
++ Let JecSys/README.md refer to the input/README.md
++ Remove jecinv.md, cppconfig.md, refactClass.md. If something is relevant, mention in those README.md  
+
+Thanks a lot. I am also thinking of 3rd approach where we have cpp+config approach:
++ Have one Makefile for all cpp codes macro + CondFormats
++ Convert macros to classes
++ Each class then reads the corresponding config/className.json
+
+This way, most of the time we will not touch cpp code.  What do you say. Maybe outline the design in cppconfig.md
+
+
+Thanks. Let us now focus on  the input dir. Since there is no for loop (in the sense of event loop) involved, I am thinking of moving the whole input creation scripts to python. Every *.C script can have a python equivalent. However, to follow the best coding practice we can separate the data-logic to config/scriptName.json and keep the coding logic in scriptName.py files. 
+
+Can you please implement the python version side by side and compare the performance gain vs c++. And let me know which one you would finally pick :-) 
+
+
+Thanks. 
+
+I have restored refactClass.md. First few sections of which can be used for input creation.
+
+Can  you please move the corresponding scripts/root files used for inputs creation in prefit, forfit directories. If needed, feel free to have a separate Makefile in the forfit directory for input creation. I think we can also move the card dir inside the forfit. Feel free to adjust as needed.
+
+
+Thanks a lot. Let us do cleaning:
++Remove refactClass.md, refact.md, minicombine.md
++Update the README.md 
++Remove all the earlier (legacy) codes which are not needed after refactoring 
+
+
+I agree with almost every point in minicombine.md
+
++This package is run 50 times a day sometimes and delivers the official CMS JEC. It is a 15 years old package that desperately needs redesign following best coding practices.
++I agree, we do not need RooFit/RooWorkspace or python 
++I would prefer text file over json
++I would like to have our one names jecFit, jecWorkspace, jecCombineCards
+
+With these inputs, please implement the minicombine.md. Feel free to implement in few phases with doc/prompt_minicombine_phase_X.txt note 
+
+
+In the refact.md and refactClass.md files,  we have alternate plans to refactor/restructure the 
+JecSys code base. I am thinking of another possibility similar to what we have in the Higgs combine tool:
+https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit/
+
+Can you please carefully look at our package and write your thoughts in minicombine.md file to design the entire package.
+
+-----------------------------------------------
+        Date: 18 November 2026
+-----------------------------------------------
+
+If we go to the ../jecsys/ dir and source runMe.sh then the global fit runs for all four years. I would like to copy all the corresponding codes/root/txt file which are needed to run  the full chain in runMe.sh. We do NOT need to copy rest of the codes/root/txt files which are not  used. The idea is to have cleaner JecSys package from the jecsys. In the end the runMe.sh in this JecSys package should be running.
+Thanks a lot. Next I would like to have complete restructure of the JecSys. We can have the following NEW subdirs:
+header  Makefile forfit  postfit      README.md
+cpp        prefit   main.cpp   obj config
+
+where mv all .h into header,  all .C/.cpp into cpp. compile inside Makefile, create a runFit executable. The runFit -h command should print all the commands for an epochs available to run based on the config/inputs.json. The input root files can sit inside the prefit dir. The config dir should contain all the data-logic based that is parsed to the code logic. The forfit dir can contain all the intermediate root files that we make before the fitting. We can have separate codes to perform those steps.
+
+The whole idea is to follow best coding practice and update this entire package so that it is flexible, maintainable, understandable and most importantly less bug-prone.
+
+Feel free to suggest any other design if you have. For now, please write your take in refact.md file and let us brainstorm a few rounds. Once we converge on the design, we can start implementing the refactor.
+
+
+Thanks a lot. I would also like to follow camelCase naming convention for functions/methods/variables. We can convert the current names to camelCase.
+
+Also I am thinking of restructuring entire thing as c++ class based framework. What is your take on that. Write in refactClass.md file.
+
+By the way, below, I answer your question
+
+1. Parity: must every phase reproduce today's numbers exactly, with physics fixes postponed to after the refactor? [Yes.]
+
+Ravindra: Yes. Note them down in a toDo.txt file
+
+2. Epoch scope: only the 4 reference IOVs, or also the sub-IOVs (2016BCD, 2018A, ...), 2017H (low PU) and Run2Test / globalFitRun2.C? This decides how much of the 136-file if maze to carry over. [The 4 IOVs now; the config design allows adding the others as data later.]
+
+Ravindra: Yes, 4 IOVs for now; yes keep the flexibility
+
+3. Per-step output files (§3) instead of one shared jecdata<epoch>.root? [Per-step files.]
+
+Ravindra: Yes, per-step files
+
+Legacy options: drop CorLevel = L1L2Res, softrad.C (α extrapolation), alternative fit models (njesFit != 9), setFullShapeFuncs, unused samples/outputs (hruncl, th2d_jeteta_zpt)? [Drop. They stay available in jecsys history.]
+
+Ravindra: keep the CorLevel = L1L2Res, drop others.
+
+5. renormpf: keep as an optional step (not used by the fit today), or drop until globalFitRun2 is ported? [Keep, optional, not in all.]
+
+Ravindra: keep optional
+
+6. Names: header/ + cpp/ (your proposal) or include/ + src/? Flat or with sub-folders? [Your names, with sub-folders.]
+
+Ravindra: use header/cpp. Flat, no sub-folders. Since we just have few files only it is convenient for navigation
+
+7. Config granularity: one inputs.json for everything, or split by concern as in §2? [Split; inputs.json stays the epoch registry that -h reads.]
+
+Ravindra: I prefer different file.json for different class/file.C code. The json and C code can have same names so that we can see which one is used where.
+
+8. External ../JERCProtoLab inputs (10 files): copy into prefit/JERCProtoLab/ or point to them by path in config? [Copy, so prefit/ is self-contained.]
+
+Ravindra: point them by path in config
+
+9. Minimizer: TMinuit for parity, Minuit2 later? [Yes.]
+
+Ravindra: Yes.
+
+10. Plotting: stay in C++ (ROOT) or move to Python (uproot + matplotlib) later? [C++ now, since the plots are part of the parity check.]
+
+Ravindra: C++
+
+11. Build system: Makefile (as you proposed) or CMake? [Makefile; it is enough for one binary.]
+
+Ravindra: Makefile
+
+12. Inputs on EOS: should dirs.prefit be able to point to EOS / another machine? [Yes, it's just a path in config.]
+
+Ravindra: just path in config
+
+In the refact.md and refactClass.md files,  we have alternate plans to refactor/restructure the JecSys code base. I am thinking of another possibility similar to what we have in the Higgs combine tool:
+https://github.com/cms-analysis/HiggsAnalysis-CombinedLimit/
+
+Can you please carefully look at our package and write your thoughts in minicombine.md file to design the entire package.
+

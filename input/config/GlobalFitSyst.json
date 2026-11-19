@@ -1,0 +1,100 @@
+{
+  "_doc": "globalFitSyst: systematic shapes for the global fit, written into the pre-fit file (was globalFitSyst.C). Object paths are relative to 'etaDir' of the pre-fit file; paths of external files start with a root of config/Inputs.json ({prefit}). Each block can be switched off with enabled=false. Dropped from the macro: the 2017H branch (all blocks off) and the Run2Test exception of incjetHdm (missing reference allowed); the unused clone ptchs_multijet_src0 of multijetJer.",
+  "default": {
+    "etaDir": "ratio/eta00-13",
+    "fsrDir": "fsr",
+    "sysDir": "sys",
+
+    "multijetJer": {
+      "enabled": true,
+      "mode": "ptave",
+      "_modeNote": "leading, recoil, or ptave (average of the two fits, placeholder for an updated JER); keep consistent with multijetMode of reprocess",
+      "binning": "fsr/hkfsr3_ptchs_multijet",
+      "clone": "mpfchs1_multijet_src0",
+      "output": "jer_multijet",
+      "ptRange": [114, 2000],
+      "_ptRangeNote": "open interval; hard-coded in the macro ('use counts later?')",
+      "scale": 0.01,
+      "functions": {
+        "recoil":  { "formula": "[0]+[1]*pow(0.01*x,[2])", "range": [114, 2000], "parameters": [0.138, -0.993, -0.561] },
+        "leading": { "formula": "[0]+[1]*pow(0.01*x,[2])", "range": [114, 2000], "parameters": [0.192, -0.384, -3.260] }
+      },
+      "_functionsSource": "fits in minitools/systMultijet.C on UL17BCDEF; flat JER SF uncertainty assumed"
+    },
+
+    "gamMass": {
+      "enabled": true,
+      "binning": "fsr/hkfsr3_mpfchs1_gamjet",
+      "formula": "[0]+[1]*log(0.01*x)+[2]*pow(log(0.01*x),2)",
+      "range": [15, 3000],
+      "errorMatrix": [[ 3.73e-08,  1.5e-08,  -5.07e-08],
+                      [ 1.5e-08,   1.17e-07, -6.39e-08],
+                      [-5.07e-08, -6.39e-08,  2.02e-07]],
+      "_errorMatrixSource": "Zee mass fit, 17Nov17_V10 BCDEF (EOY2017), copied from reprocess.C / minitools/drawZmass.C",
+      "ptFactor": 2,
+      "_ptFactorNote": "the eigenvector functions are evaluated at 2*pT(photon), the Z pT scale",
+      "output": "zee_gamjet_eig{eig}"
+    },
+
+    "gamGains": {
+      "enabled": true,
+      "file": "{prefit}/DP2021033V2/GamHistosFill_data_2018ABCD_v19.root",
+      "gain1": { "profile": "control/pgain1vspt", "output": "gamjet_gain1" },
+      "gain6": { "profile": "control/pgain6vspt", "output": "gamjet_gain6" },
+      "scale": 0.01,
+      "hdm": { "source": "hdm_mpfchs1_gamjet", "output": "hdm_gamjet", "gain1Weight": 0.0, "gain6Weight": 0.0,
+               "_note": "pure HDM variant for globalFitRun2: hdm - w1*gain1 - w6*gain6 in non-empty bins; 0.5 would match zjet, 0 matches Zll+jet" }
+    },
+
+    "hadwFitProb": {
+      "enabled": true,
+      "binning": "counts_hadw_a30",
+      "scale": 0.01,
+      "functions": {
+        "fhadw_ptave":   { "formula": "[0]+[1]/(log(x/0.218) * x)",  "range": [30, 200], "parameters": [0.95564, -139] },
+        "fhadw_ptboth":  { "formula": "[0]+[1]/(log(x/0.218) * x)",  "range": [30, 200], "parameters": [0.99556, -128.37] },
+        "fhadw2_ptave":  { "formula": "[0]+fabs([1])/(log(x/0.218))", "range": [30, 200], "parameters": [0.57464, -2.104e-10] },
+        "fhadw2_ptboth": { "formula": "[0]+fabs([1])/(log(x/0.218))", "range": [30, 200], "parameters": [0.65814, -4.1327e-07] }
+      },
+      "_functionsSource": "UL18 fitProb scans of minitools/hadW.C::DrawFP(), used for all epochs (UL17 values: ptave 0.20652, 86.857; ptboth 0, 125.54)",
+      "outputs": [
+        { "name": "hadw_ptave_fitprob",   "function": "fhadw_ptave" },
+        { "name": "hadw_ptboth_fitprob",  "function": "fhadw_ptboth" },
+        { "name": "hadw_ptave_fitprob2",  "function": "fhadw2_ptave",  "minus": "fhadw_ptave" },
+        { "name": "hadw_ptboth_fitprob2", "function": "fhadw2_ptboth", "minus": "fhadw_ptboth" }
+      ],
+      "_outputsNote": "signed sources in units of 1 (scale*function, or scale*(function-minus)); written in this order"
+    },
+
+    "hadwFsr": {
+      "enabled": true,
+      "file": "{prefit}/rootfiles/hadWMC16GHV7_JEC.root",
+      "_fileNote": "FSR variations from PS weights (only in UL16V7); a symlink to a stand-in, see README.md",
+      "nominal": "pmm13bptave",
+      "up": "pmm13bptave_FSRup",
+      "down": "pmm13bptave_FSRdw",
+      "fsr": "hadw_fsr",
+      "fsrScale": 1.0,
+      "_fsrNote": "hadw_fsr = 1 + fsrScale*(up-down)/nominal, written to fsrDir; 1.0 matches zjet and gamjet better than 1.5",
+      "graph": "mpfchs1_hadw_a30",
+      "graphClone": "hdm_mpfchs1_hadw",
+      "graphOutput": "ghdm_hadw",
+      "histOutput": "hdm_hadw",
+      "_hdmNote": "HDM variant of W>qq': graph divided by hadw_fsr; the hadw_fsr uncertainty is not added (likely correlated for up and down)",
+      "sysOutputs": ["hadw_ptave_fsr", "hadw_ptboth_fsr"],
+      "_sysOutputsNote": "(up-down)/nominal; ptboth is a clone of ptave"
+    },
+
+    "incjetHdm": {
+      "enabled": true,
+      "referenceFile": "{prefit}/rootfiles/jecdataRun2Test.root",
+      "reference": "ratio/eta00-13/hdm_cmb_mj",
+      "graph": "mpfchs1_incjet_a100",
+      "graphOutput": "ghdm_incjet",
+      "histOutput": "hdm_incjet",
+      "_note": "TH1D version of the inclusive-jet graph for globalFitRenormPF, multiplied by the Run2Test reference hdm_cmb_mj"
+    }
+  },
+  "eras": {},
+  "epochs": {}
+}

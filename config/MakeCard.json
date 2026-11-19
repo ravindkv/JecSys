@@ -1,0 +1,56 @@
+{
+  "_doc": "MakeCard: which graphs go into the fit and which nuisances act on them (was globalFitL3Res.C lines 354-1616). jecMakeCard turns this into card/<corLevel>/<epoch>/datacard.txt + shapes.root. Edit numbers HERE, never in the generated datacard.",
+  "default": {
+    "etaRange": [0.0, 1.3],
+    "ptMin": 15, "_ptMinNote": "was ptminJesFit",
+
+    "methods": ["ptchs", "mpfchs1"],
+    "samples": ["multijet", "gamjet", "zjet", "hadw"],
+    "_samplesNote": "was selectSample = MJDJ_gam_z_hadw, selectMethods = PtBalMPF (DP_2021). The order defines the order of channels and of the FSR nuisances.",
+
+    "sampleSettings": {
+      "multijet": { "kind": "multijet", "alpha": 30, "fsr": "hdm", "crecoil": "crecoil_multijet_a30",
+                    "_note": "alpha is the pT threshold (was ptmj). crecoil a30 is used for both methods when HDM is on (dofsr3mj)." },
+      "gamjet":   { "kind": "response", "alpha": 100, "fsr": "hdm", "scale": 0.005, "hdmScale": 0.002,
+                    "_scaleSource": "globalFitL3Res.C:1308, 'UL17-v2 (after 1.0% rescale)'",
+                    "_hdmScaleSource": "globalFitL3Res.C:1367" },
+      "zjet":     { "kind": "response", "alpha": 100, "fsr": "hdm", "scale": 0.002, "hdmScale": 0.002,
+                    "_scaleSource": "globalFitL3Res.C:1337, 'Zmm mass within 0.2% of unity, Zee fixed to it'",
+                    "_hdmScaleSource": "globalFitL3Res.C:1371" },
+      "hadw":     { "kind": "response", "alpha": 30, "fsr": "none",
+                    "_note": "no FSR correction (dofsrhadw = false, DP_2021)" }
+    },
+
+    "fsrEigenvectors": ["mpfu1", "mpfn1"],
+    "_fsrNote": "FSR nuisances are fsr/hkfsr3_<method>_<sample>_<eigenvector> from softrad3. A sample with fsr = none still gets (inactive) rows, as today; see toDo.txt.",
+
+    "sources": [
+      { "name": "hadw_ptave_fitprob",   "object": "sys/hadw_ptave_fitprob",   "from": "refIov", "appliesTo": ["ptchs_hadw"] },
+      { "name": "hadw_ptboth_fitprob",  "object": "sys/hadw_ptboth_fitprob",  "from": "refIov", "appliesTo": ["mpfchs1_hadw"] },
+      { "name": "hadw_ptave_fitprob2",  "object": "sys/hadw_ptave_fitprob2",  "from": "refIov", "appliesTo": ["ptchs_hadw"] },
+      { "name": "hadw_ptboth_fitprob2", "object": "sys/hadw_ptboth_fitprob2", "from": "refIov", "appliesTo": ["mpfchs1_hadw"] },
+      { "name": "eesfromzee_gamjet_eig0", "object": "sys/zee_gamjet_eig0", "from": "epoch", "appliesTo": ["ptchs_gamjet", "mpfchs1_gamjet"] },
+      { "name": "eesfromzee_gamjet_eig1", "object": "sys/zee_gamjet_eig1", "from": "epoch", "appliesTo": ["ptchs_gamjet", "mpfchs1_gamjet"] },
+      { "name": "eesfromzee_gamjet_eig2", "object": "sys/zee_gamjet_eig2", "from": "epoch", "appliesTo": ["ptchs_gamjet", "mpfchs1_gamjet"] }
+    ],
+    "_sourcesNote": "Histogram nuisances from globalFitSyst. 'from: refIov' reads the reference IOV (was dsys). A source is skipped if none of its channels is in the fit.",
+
+    "pfFractions": {
+      "fractions": ["chf", "nhf", "nef"],
+      "samples": [
+        { "sample": "pfjet", "alpha": 30,  "delta": 0.20, "ptRange": [43, 600],
+          "_note": "dijet PF composition; was fitPF_delta, minPFpt, maxPFpt (DP_2021 values)" },
+        { "sample": "zjet",  "alpha": 100, "delta": 0.10, "ptRange": [25, 300],
+          "_note": "Z+jet PF composition; was fitPFZ_delta, minPFZpt, maxPFZpt (DP_2021 values)" }
+      ]
+    },
+
+    "jesRef": "herr_l2l3res",
+    "_jesRefNote": "Closure reference the model is divided by when corLevel = L1L2L3Res (was _hjesref, useL2L3ResForClosure)."
+  },
+  "eras": {
+    "UL16APV": { "sampleSettings": { "gamjet": { "scale": 0.002, "_scaleSource": "globalFitL3Res.C:1309, 'to better match scale from Zee'" } } },
+    "UL16":    { "sampleSettings": { "gamjet": { "scale": 0.002, "_scaleSource": "globalFitL3Res.C:1309, 'to better match scale from Zee'" } } }
+  },
+  "epochs": { }
+}

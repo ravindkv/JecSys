@@ -1,0 +1,14 @@
+{
+  "_doc": "InputChain (input/jecMakeInputs; was mk_reprocess.C): the steps of the input-creation chain and their arguments, run in this order in one process. Each step updates the pre-fit file of the epoch ('forfit' of config/Inputs.json, or --file). step: reprocess, softRad, globalFitSyst, globalFitRenormPF (the names of --steps). tag: the name of the per-step snapshot (--snapshot DIR writes DIR/<epoch>/<tag>.root); the golden snapshots in input/test/golden/ have these names.",
+  "default": {
+    "steps": [
+      { "step": "reprocess", "tag": "1_reprocess" },
+      { "step": "softRad", "tag": "2_softrad3_13", "etamin": 0.0, "etamax": 1.3, "_note": "FSR (HDM method), |eta| < 1.3" },
+      { "step": "softRad", "tag": "3_softrad3_25", "etamin": 0.0, "etamax": 2.5, "_note": "FSR (HDM method), |eta| < 2.5" },
+      { "step": "globalFitSyst", "tag": "4_globalFitSyst" },
+      { "step": "globalFitRenormPF", "tag": "5_globalFitRenormPF", "_note": "not used by the fit today" }
+    ]
+  },
+  "eras": {},
+  "epochs": {}
+}

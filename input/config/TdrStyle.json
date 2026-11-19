@@ -1,0 +1,32 @@
+{
+  "_doc": "CMS TDR plot style (was setTDRStyle() in tdrstyle_mod15.C). Each entry is a TStyle setter and its arguments, applied in this order. The style also sets the default attributes of the histograms and graphs the input creation writes.",
+  "default": {
+    "name": "tdrStyle",
+    "title": "Style for P-TDR",
+    "setters": [
+      ["SetCanvasBorderMode", 0], ["SetCanvasColor", 0], ["SetCanvasDefH", 600], ["SetCanvasDefW", 600],
+      ["SetCanvasDefX", 0], ["SetCanvasDefY", 0],
+      ["SetPadBorderMode", 0], ["SetPadColor", 0], ["SetPadGridX", false], ["SetPadGridY", false],
+      ["SetGridColor", 0], ["SetGridStyle", 3], ["SetGridWidth", 1],
+      ["SetFrameBorderMode", 0], ["SetFrameBorderSize", 1], ["SetFrameFillColor", 0], ["SetFrameFillStyle", 0],
+      ["SetFrameLineColor", 1], ["SetFrameLineStyle", 1], ["SetFrameLineWidth", 1],
+      ["SetHistLineColor", 1], ["SetHistLineStyle", 0], ["SetHistLineWidth", 1],
+      ["SetEndErrorSize", 2], ["SetMarkerStyle", 20],
+      ["SetOptFit", 1], ["SetFitFormat", "5.4g"], ["SetFuncColor", 2], ["SetFuncStyle", 1], ["SetFuncWidth", 1],
+      ["SetOptDate", 0], ["SetOptFile", 0], ["SetOptStat", 0],
+      ["SetStatColor", 0], ["SetStatFont", 42], ["SetStatFontSize", 0.025], ["SetStatTextColor", 1],
+      ["SetStatFormat", "6.4g"], ["SetStatBorderSize", 1], ["SetStatH", 0.1], ["SetStatW", 0.15],
+      ["SetPadTopMargin", 0.05], ["SetPadBottomMargin", 0.13], ["SetPadLeftMargin", 0.16], ["SetPadRightMargin", 0.02],
+      ["SetOptTitle", 0], ["SetTitleFont", 42], ["SetTitleColor", 1], ["SetTitleTextColor", 1],
+      ["SetTitleFillColor", 10], ["SetTitleFontSize", 0.05],
+      ["SetTitleColor", 1, "XYZ"], ["SetTitleFont", 42, "XYZ"], ["SetTitleSize", 0.06, "XYZ"],
+      ["SetTitleXOffset", 0.9], ["SetTitleYOffset", 1.25],
+      ["SetLabelColor", 1, "XYZ"], ["SetLabelFont", 42, "XYZ"], ["SetLabelOffset", 0.007, "XYZ"], ["SetLabelSize", 0.05, "XYZ"],
+      ["SetAxisColor", 1, "XYZ"], ["SetStripDecimals", true], ["SetTickLength", 0.03, "XYZ"], ["SetNdivisions", 510, "XYZ"],
+      ["SetPadTickX", 1], ["SetPadTickY", 1], ["SetOptLogx", 0], ["SetOptLogy", 0], ["SetOptLogz", 0],
+      ["SetPaperSize", 20.0, 20.0], ["SetHatchesLineWidth", 5], ["SetHatchesSpacing", 0.05]
+    ]
+  },
+  "eras": {},
+  "epochs": {}
+}

@@ -1,0 +1,15 @@
+{
+  "_doc": "Epoch registry of the parity test (test/parity.sh): same as config/Inputs.json, but the pre-fit files are the frozen golden outputs of the old macro chain and the results go to obj/test/.",
+  "roots": { "card": "obj/test/card", "postfit": "obj/test/postfit",
+             "prefit": "input/prefit", "forfit": "test/golden", "protolab": "../JERCProtoLab" },
+  "epochs": {
+    "2016BCDEF": { "era": "UL16APV", "refIov": "2016BCDEF", "corLevel": "L1L2L3Res", "forfit": "{forfit}/jecdata2016BCDEF.root",
+                   "ptBinning": { "file": "{prefit}/DP2021033V2/drawDeltaJEC_16ULJECV5_vsBCDEF.root", "object": "jet_Run16ULBCDEF_fwd" } },
+    "2016GH":    { "era": "UL16", "refIov": "2016BCDEF", "corLevel": "L1L2L3Res", "forfit": "{forfit}/jecdata2016GH.root",
+                   "ptBinning": { "file": "{prefit}/DP2021033V2/drawDeltaJEC_16ULJECV5_vsBCDEF.root", "object": "jet_Run16ULGH_fwd" } },
+    "2017BCDEF": { "era": "UL17", "refIov": "2017BCDEF", "corLevel": "L1L2L3Res", "forfit": "{forfit}/jecdata2017BCDEF.root",
+                   "ptBinning": { "file": "{prefit}/rootfiles/drawDeltaJEC_17UL_V2M4res_cp2_all_v4.root", "object": "jet_Run17UL_fwd3" } },
+    "2018ABCD":  { "era": "UL18", "refIov": "2018ABCD", "corLevel": "L1L2L3Res", "forfit": "{forfit}/jecdata2018ABCD.root",
+                   "ptBinning": { "file": "{prefit}/rootfiles/drawDeltaJEC_18UL_JECv3.root", "object": "jet_Run18UL_det" } }
+  }
+}

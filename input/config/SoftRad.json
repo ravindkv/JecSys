@@ -1,0 +1,68 @@
+{
+  "_doc": "SoftRad (was softrad3.C): FSR (soft radiation) corrections with the HT decomposition method (HDM). For each sample, method and eta region it solves the HDM model for the response R1 of the leading jet, in data and MC, and writes hdm_<method>_<sample> and fsr/hkfsr3_<method>_<sample>[<component>] into jecdata<epoch>.root (UPDATE). The class has the logic; everything below is data. Dropped from softrad3.C: the Flavor object (it was only used for a printout of the gluon JES), the branches of Run2Test, 2017H and the sub-IOVs (2016BCD, 2016EF, 2018A-D), the unused flag useGluonJES and argument dodijet. getY() keeps the behaviour of the macro, which returns the FIRST point inside the pT bin (toDo.txt A1).",
+  "default": {
+    "readDirs": ["data", "mc", "ratio"],
+    "readMethods": ["counts", "mpf1", "mpfn", "mpfu", "mpfchs1", "ptchs"],
+    "writeDirs": ["ratio", "data", "mc"],
+    "methods": ["mpfchs1", "ptchs"],
+    "_orderNote": "The order of writeDirs, methods and samples is the order of the writes, which fixes the key cycles of the output; keep it.",
+
+    "flavors": "ibcqgn",
+    "samples": {
+      "eta00-13": ["multijet", "zlljet", "zeejet", "zmmjet", "gamjet", "g*", "g**", "zjet", "z*", "z**"],
+      "eta00-25": ["zjet", "z*", "z**"]
+    },
+    "_samplesNote": "Keys are the eta directories (eta<10*etamin>-<10*etamax>). 'g*' expands to g + one flavour letter (gi, gb, ...), 'g**' to g + tag letter + generator letter (gii, gib, ..., gnn), letters from 'flavors' in this order. The '**' samples exist only in MC: their data and ratio inputs are replaced by MC (ratio = 1).",
+
+    "alphaRef": { "default": 100, "multijet": 30 },
+    "_alphaRefNote": "The input graphs are <method>_<sample>_a<alphaRef> (was aref, mptref).",
+    "countsFrom": { "zlljet": "zmmjet" },
+    "_countsFromNote": "The pT binning of zlljet is taken from the zmmjet counts (PATCH in the macro).",
+
+    "model": {
+      "default":  { "Rn": 1.0, "Ru": 0.685, "R2": 1.0 },
+      "multijet": { "Rn": 1.0, "Ru": 0.65,  "R2": 1.0 },
+      "_note": "Response of the subleading jets (Rn), of the unclustered energy (Ru) and of the multijet recoil (R2), the same in data and MC (DP_2021). Ru(DY,CP5,UL17) = 0.685; multijet Ru from minitools/drawMultijetMPB_ISRonly.pdf.",
+      "variations": { "dRnd": -0.01, "dRnm": -0.02, "dRud": 0.08, "dRum": 0.05 },
+      "_variationsNote": "Systematic variations: dRnd data-MC Rn (guesstimate), dRnm quark/gluon Rn, dRud data/MC Ru (QCD data=2.7 / FullSim=2.5), dRum MC Ru (HS1 vs CP5).",
+      "k": 1.0,
+      "_kNote": "extra fudge factor of the multijet Pn, Pu",
+      "rootRange": [0.1, 1.9],
+      "_rootRangeNote": "R1 is found with TF1::GetX(0, xmin, xmax)"
+    },
+
+    "functions": {
+      "mpf":           { "name": "fm",  "formula": "x - ([0] + (x/[3]-1)*[1] + (x/[4]-1)*[2])", "range": [0, 13000] },
+      "ptbal":         { "name": "fp",  "formula": "x - ([0] + (x/[3]  )*[1] + (x/[4]  )*[2])", "range": [0, 13000] },
+      "mpfMultijet":   { "name": "fma", "formula": "(x-1)/(x+1)-[0] + (1 - (x+1)/(2.*[3]/[5])) * [1] + (1 - (x+1)/(2.*[4]/[5])) * [2]", "range": [0, 13000] },
+      "ptbalMultijet": { "name": "fma", "formula": "(x-1)/(x+1)-[0] + (0 - (x+1)/(2.*[3]/[5])) * [1] + (0 - (x+1)/(2.*[4]/[5])) * [2]", "range": [0, 13000] },
+      "_note": "HDM model, solved for x = R1. mpf/ptbal: Z/gamma+jet with parameters (R0 or R1 measured, Rn, Ru, Rn model, Ru model). Multijet: in terms of A=(R0-1)/(R0+1), B=(R1-1)/(R1+1), with parameters (A or B, Pn, Pu, Rn, Ru, R2). The second multijet function has the name 'fma' too, as in the macro."
+    },
+
+    "checks": {
+      "multijetMpf": 1e-3,
+      "zjetMpf": 3.9e-3,
+      "zjetMpfWarning": 1e-3,
+      "ptbalWarning": 1e-3,
+      "sumRuleWarning": 1e-3,
+      "_note": "|r0/q0 - MPF ratio| must be below multijetMpf (multijet), or, for the other samples, if it is above zjetMpfWarning, below zjetMpf (unless the MPF ratio is 0); larger pT-balance or MPF-sum-rule differences are only reported (with --verbose)."
+    },
+
+    "names": {
+      "etaDir": "eta{eta1:02d}-{eta2:02d}",
+      "input": "{dir}/{eta}/{method}_{sample}_a{ref}",
+      "fsrDir": "{dir}/{eta}/fsr",
+      "fsr": "hkfsr3_{method}_{sample}{suffix}",
+      "hdmDir": "{dir}/{eta}",
+      "hdm": "hdm_{method}_{sample}"
+    },
+    "hdmClone": "hdm",
+    "fsrComponents": [
+      ["fsr", ""], ["fsr0s", "_mpf0s"], ["fsr1s", "_mpf1s"], ["fsrn1", "_mpfn1"], ["fsrn2", "_mpfn2"],
+      ["fsrns", "_mpfns"], ["fsru1", "_mpfu1"], ["fsru2", "_mpfu2"], ["fsrus", "_mpfus"]
+    ],
+    "_fsrComponentsNote": "[histogram name, key suffix], in the order of the writes: fsr = FSR correction (error = systematic), 0s/1s = statistical uncertainty of R0/R1, n1/n2 = Rn variations, ns = Rn statistics, u1/u2 = Ru variations, us = Ru statistics."
+  },
+  "eras": {},
+  "epochs": {}
+}

@@ -1,0 +1,54 @@
+{
+  "_doc": "globalFitRenormPF: renormalised PF fractions and pre-combined PF and HDM inputs, written into the pre-fit file (was globalFitRenormPF.C). Object names are templates relative to the pre-fit file ({tier}, {var}, {set}, {epoch}). Not used by the fit today. Dropped from the macro: the 2017H branch (other sets, scaleRes-only HDM variant) and the Run2Test exception (no incjet).",
+  "default": {
+    "etaDir": "eta00-13",
+    "tiers": ["data", "mc", "ratio"],
+    "variables": ["chf", "nef", "nhf"],
+
+    "renormalize": {
+      "sets": ["zeejet", "zmmjet", "zlljet", "zjet", "pfjet"],
+      "_setsNote": "gamjet left out (DP_2021)",
+      "inputs": ["{tier}/eta00-13/{var}_{set}_a100", "{tier}/eta00-13/{var}_{set}_a30"],
+      "_inputsNote": "the first that exists (a30 for pfjet)",
+      "output": "{var}_{set}_ren",
+      "_note": "data and MC: fraction / (chf+nef+nhf); ratio: data - MC of the renormalised fractions"
+    },
+
+    "ptBins": [15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 85, 130, 175, 230, 300, 400, 500,
+               592, 686, 790, 905, 1032, 1172, 1327, 1497, 1684, 1890, 2116, 2366, 2640, 2941, 3273, 5220],
+    "_ptBinsNote": "binning of the pre-combined results: Z/W only up to 60, +gamjet from 70, multijet above 500",
+    "fitFunction": { "formula": "[0]", "range": [15, 7000] },
+    "fitOption": "QRN",
+
+    "precombinePF": {
+      "sets": ["zlljet", "zjet", "pfjet"],
+      "input": "{tier}/eta00-13/{var}_{set}_ren",
+      "minPt": { "pfjet": 30, "gamjet": 70 },
+      "_minPtNote": "bins with a lower edge below this are not used for the set",
+      "histogram": "h_{epoch}",
+      "function": "f1_{epoch}",
+      "output": "{var}_cmb_ren",
+      "_note": "per pT bin: constant fit to each set, inverse-variance average; outputs <output> (graph), _stat, _syst (RMS) and _tot"
+    },
+
+    "precombineHDM": {
+      "sets": ["gamjet", "zlljet", "zjet", "hadw", "incjet"],
+      "multijet": "multijet",
+      "_multijetNote": "added last (it refers to the combination of the sets before it) in the variants with addMJ",
+      "tiers": ["ratio"],
+      "inputs": ["{tier}/eta00-13/hdm_mpfchs1_{set}", "{tier}/eta00-13/hdm_{set}"],
+      "crecoil": "{tier}/eta00-13/crecoil_{set}_a30",
+      "l2l3res": "ratio/eta00-13/herr_l2l3res",
+      "histogram": "h1_hdm_{epoch}",
+      "function": "f1hdm_{epoch}",
+      "variants": [
+        { "addMJ": false, "scaleRes": false },
+        { "addMJ": true,  "scaleRes": false },
+        { "addMJ": true,  "scaleRes": true }
+      ],
+      "_variantsNote": "outputs hdm_cmb[_mj][_res], _syst and _tot; scaleRes multiplies by the L2L3Res band herr_l2l3res"
+    }
+  },
+  "eras": {},
+  "epochs": {}
+}

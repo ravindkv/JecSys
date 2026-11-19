@@ -1,0 +1,28 @@
+{
+  "_doc": "Epoch registry (README.md). 'roots' are directories relative to the repository root; a path in any config file can start with one, as '{prefit}/jec/...'. 'forfit' is the pre-fit file written by the input creation (make inputs).",
+  "roots": { "card": "input/forfit/card", "postfit": "output/postfit",
+             "prefit": "input/prefit", "forfit": "input/forfit/reprocess", "protolab": "../JERCProtoLab" },
+  "epochs": {
+    "2016BCDEF": {
+      "era": "UL16APV", "refIov": "2016BCDEF", "corLevel": "L1L2L3Res",
+      "forfit": "{forfit}/jecdata2016BCDEF.root",
+      "ptBinning": { "file": "{prefit}/DP2021033V2/drawDeltaJEC_16ULJECV5_vsBCDEF.root", "object": "jet_Run16ULBCDEF_fwd",
+                     "_note": "Only the binning is used (for hjesfit*); was 'hij' in the old globalFitL3Res.C" }
+    },
+    "2016GH": {
+      "era": "UL16", "refIov": "2016BCDEF", "corLevel": "L1L2L3Res",
+      "forfit": "{forfit}/jecdata2016GH.root",
+      "ptBinning": { "file": "{prefit}/DP2021033V2/drawDeltaJEC_16ULJECV5_vsBCDEF.root", "object": "jet_Run16ULGH_fwd" }
+    },
+    "2017BCDEF": {
+      "era": "UL17", "refIov": "2017BCDEF", "corLevel": "L1L2L3Res",
+      "forfit": "{forfit}/jecdata2017BCDEF.root",
+      "ptBinning": { "file": "{prefit}/rootfiles/drawDeltaJEC_17UL_V2M4res_cp2_all_v4.root", "object": "jet_Run17UL_fwd3" }
+    },
+    "2018ABCD": {
+      "era": "UL18", "refIov": "2018ABCD", "corLevel": "L1L2L3Res",
+      "forfit": "{forfit}/jecdata2018ABCD.root",
+      "ptBinning": { "file": "{prefit}/rootfiles/drawDeltaJEC_18UL_JECv3.root", "object": "jet_Run18UL_det" }
+    }
+  }
+}

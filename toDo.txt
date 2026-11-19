@@ -1,11 +1,14 @@
-JecSys toDo: items postponed until after the refactor
-=====================================================
-Agreed 2026-11-18: every refactor phase must reproduce today's numbers
-exactly. The items below are noted here and NOT fixed during the refactor.
-Each one is done later as its own commit, with a before/after compareRoot
-report.
+JecSys toDo
+===========
+Rule (agreed 2026-11-18): a clean-up or refactoring must reproduce the numbers
+exactly ("make test"). Anything that changes the numbers is listed here and
+done as its own commit, with a before/after report from jecCompare.
 
-Line numbers refer to the current (pre-refactor) files in JecSys.
+Line numbers of reprocess.C, softrad3.C and globalFitSyst.C refer to the
+files in input/. Input files named rootfiles/... and DP2021033*/...
+are in input/prefit/. globalFitL3Res.C was replaced by the compiled fit
+chain (runFit) and removed; references to it point to the last version in
+the git history (and in ../jecsys).
 
 A. Physics fixes (change the numbers)
 -------------------------------------
@@ -16,15 +19,16 @@ A1. softrad3.C:37-51  getY(): dx is never updated, so the test
 A2. reprocess.C:3141-3146  gamma+jet mass correction is applied only to
     mpfchs1/ptchs/mpf1, not to mpfn/mpfu ("DP_2021 (bug!)"). The "latest"
     variant is in the comment just above it.
-A3. globalFitL3Res.C:1577  bitmask "((1<<0) | (1<<nsamples))" marked "bug!"
-    (currently commented out). Check which sources it was meant for. This
-    becomes moot once sources list explicit targets (FitData.json).
+A3. (closed) The bitmask marked "bug!" in globalFitL3Res.C no longer exists:
+    a nuisance names its channels in the datacard.
 A4. Nuisance sources 17/19 and 18/20 have identical shapes, so the fit cannot
     separate them. Decide whether to merge or replace them.
-A5. Review the 56 "DP_2021" markers (grep DP_2021 *.C): settings reverted for
+A5. Review the 56 "DP_2021" markers (grep DP_2021 input/*.C): settings reverted for
     the DP note (e.g. useGluonJES=false, usePFG/fitPFG=false,
     fitPF_delta=0.20, correctZMass=false). Each one becomes an explicit
-    config flag with a _note during the refactor. Decide which to restore.
+    config value with a _note. Decide which to restore. Those of the fit are
+    in config/MakeCard.json and config/JesModel9.json; the others are still
+    in the macros.
 A6. reprocess.C:50  fitUncMin = 0 with the comment "Some bug if unc<0?".
     Find the cause.
 
@@ -43,7 +47,7 @@ B5. globalFitSyst.C:~100-180  Zee -> gamma+jet mass-scale functions
     "copied from reprocess.C" (EOY2017 origin, per the stage docs). Check
     that they are valid for UL.
 B6. 2016GH reads 2016BCDEF's output as its reference (refIOV). This is by
-    design, but it must stay declared in Inputs.json.
+    design, and it is declared as "refIov" in config/Inputs.json.
 
 C. CorLevel = L1L2Res (kept as an option, but cannot run today)
 ---------------------------------------------------------------
@@ -61,23 +65,59 @@ code prints "L1L2L3Res used for L1L2Res as placeholder".
    Find the inputs (EOS? older JERCProtoLab tags?), then make a golden
    reference with jecsys and validate.
 
-D. Clean-ups that do not change the numbers (allowed during the refactor)
+D. Clean-ups that do not change the numbers
 -------------------------------------------------------------------------
-D1. reprocess.C:742   "RAED" -> "READ" (Run2Test branch, not used by the 4 epochs).
-D2. softrad3.C:860    "dR_m>0 | dR_m<0" -> "||" (same result for bools).
-D3. softrad3.C:73     unused argument dodijet.
-D4. reprocess.C:1259  rootfiles/th2d_jeteta_zpt.root is opened but never used.
-D5. reprocess.C:3920-3953  hruncl is written but never read (dropped;
-    compareRoot gets an explicit "removed by design" list).
-D6. globalFitL3Res.C:2588  result appended as a C++ snippet to
-    textFiles/globalFitL3Res.txt -> replaced by postfit/.../result.json.
-D7. Exit crash "double free or corruption" (tdrstyle_mod15.C globals
-    included in 3 ACLiC libraries). Expected to go away with the single
-    binary; confirm in Phase 1.
+D1-D4. (done 2026-11-19, with the macros: the C++ classes do not have these) reprocess.C
+    "RAED" in the Run2Test branch, softrad3.C "dR_m>0 | dR_m<0" and its unused argument
+    dodijet, reprocess.C opening the unused rootfiles/th2d_jeteta_zpt.root.
+D5. hruncl (JecBands) is written but never read; kept for byte parity with the macros.
+D6. (done) The fit result is written to output/postfit/<corLevel>/<epoch>/result.json
+    instead of being appended as a C++ snippet to textFiles/globalFitL3Res.txt.
+D7. (done 2026-11-19) Exit crash "double free or corruption" of the macros (tdrstyle_mod15.C
+    globals in several ACLiC libraries): gone with the macros; input/jecMakeInputs exits
+    cleanly.
 
-E. After the refactor
+E. Later
 ---------------------
 E1. Minuit2 via ROOT::Math::Minimizer (removes the one static callback
     pointer); validate against the TMinuit results.
 E2. Add the other epochs as config only: sub-IOVs (2016BCD, 2016EF, 2018A-D,
     2017B-F), 2017H low PU, Run2Test / globalFitRun2.C.
+
+F. minicombine follow-ups (new fit chain: jecMakeCard, jecWorkspace, jecFit)
+----------------------------------------------------------------------------
+Added 2026-11-18. Status of the implementation: doc/prompt_minicombine_phase_*.txt.
+
+F1. Remove the four inactive hadW FSR nuisances (fsr_*_hadw rows of "-"). They are
+    free parameters that stay at 0 +- 1; kept only because the parameter list must
+    match the old fit. Changes the last digits (parameter order), so it needs a
+    before/after report. Same commit: decide A4 (scale_* = hdmscale_* in UL16).
+F2. Goodness of fit: toys give a much smaller expected chi2 than the ndf (2016GH:
+    median 69 vs ndf 156, observed 134), because of the PF dead zone (delta). Decide
+    how the PF points should count, and whether the PF uncertainties need a
+    systematic term instead of a dead zone.
+F3. Combined fits: jecCombineCards works, but all channels share the model
+    parameters. Add a model (or a model option) with parameters per label, and decide
+    which nuisances are correlated between epochs. Then port globalFitRun2 (E2).
+F4. jecMakeCard does not support the samples incjet and dijet, nor FSR by alpha
+    extrapolation. incjet needs sys/hjesfit of the reference IOV: read it from
+    output/postfit/<corLevel>/<refIov>/fit.root (the fit no longer writes into
+    jecdata<epoch>.root).
+F5. jecFit: --ptMin / --ptMax, and --minimizer Minuit2 (with E1).
+F6. Plots: port the plots of the old globalFitL3Res.C that are still needed (FSR in/out,
+    doubly-shifted), add a plot for -M Impacts. Fix the PDF page size of jecPlotFit
+    (the plot does not fill the page).
+F7. Downstream tools that read sys/hjesfit, sys/emat ... from jecdata<epoch>.root or
+    textFiles/globalFitL3Res.txt must read output/postfit/<corLevel>/<epoch>/fit.root
+    (same object paths) or result.json.
+F8. (done 2026-11-19) The input macros (*.C) are replaced by C++ classes with JSON
+    configs (input/config/<Class>.json), byte-identical for the four epochs
+    (input/README.md; make -C input test against input/test/golden/). The input creation
+    is a stage of its own: input/Makefile, config/, header/, cpp/, bin/, test/. Still
+    open:
+    one output file per step instead of UPDATE-mode writes into one
+    shared jecdata<epoch>.root (then point "forfit" in config/Inputs.json to the new
+    files), and reprocess recreating its output before it checks its inputs.
+F9. The step globalFitRenormPF (was globalFitRenormPF.C) still runs, but its output is not
+    used by the fit.
+    Keep it only if globalFitRun2 is ported (E2, F3).
